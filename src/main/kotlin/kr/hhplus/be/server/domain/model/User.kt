@@ -47,6 +47,9 @@ class User(
 
     // 유저 포인트 사용
     fun usePoint(amount: Int) {
+        if (amount <= 0) {
+            throw IllegalArgumentException("유효하지 않은 입력입니다.")
+        }
         if (amount > this.point) {
             throw IllegalArgumentException("포인트가 부족합니다.")
         }
