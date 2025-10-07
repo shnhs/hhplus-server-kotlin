@@ -1,0 +1,42 @@
+package kr.hhplus.be.server.infrastructure.persistence
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+import java.util.*
+
+@Entity
+@Table(name = "da_reservations")
+class ReservationEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null
+
+    @Column(nullable = false, unique = true, updatable = false)
+    var uuid: String = UUID.randomUUID().toString()
+
+    @PrePersist
+    fun generateUuid() {
+        if (uuid.isEmpty()) {
+            uuid = UUID.randomUUID().toString()
+        }
+    }
+
+    @Column(nullable = false)
+    var concertId: String = ""
+
+    @Column(nullable = false)
+    var scheduleId: String = ""
+
+    @Column(nullable = false)
+    var seatNumber: Int = 0
+
+    @Column(nullable = false)
+    var userId: String = ""
+
+    @Column(nullable = false)
+    var reservedAt: LocalDateTime = LocalDateTime.now()
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: String = "PENDING"
+}
