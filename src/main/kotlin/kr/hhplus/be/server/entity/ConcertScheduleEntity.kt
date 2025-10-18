@@ -6,6 +6,8 @@ import org.hibernate.annotations.Comment
 import java.time.LocalDateTime
 import java.util.*
 
+@Entity
+@Table(name = "bc_concert_schedule")
 class ConcertScheduleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

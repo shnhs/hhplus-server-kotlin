@@ -6,6 +6,8 @@ import org.hibernate.annotations.Comment
 import java.time.LocalDateTime
 import java.util.*
 
+@Entity
+@Table(name = "bb_concert")
 class ConcertEntity {
 
     @Id

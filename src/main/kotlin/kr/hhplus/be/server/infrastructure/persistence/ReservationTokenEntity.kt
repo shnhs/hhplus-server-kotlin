@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Entity
-@Table(name = "ba_reservation_token")
+@Table(name = "da_reservation_token")
 class ReservationTokenEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

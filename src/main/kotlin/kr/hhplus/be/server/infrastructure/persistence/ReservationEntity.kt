@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Entity
-@Table(name = "da_reservations")
+@Table(name = "db_reservation")
 class ReservationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
