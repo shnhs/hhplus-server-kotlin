@@ -2,7 +2,10 @@ package kr.hhplus.be.server.application
 
 import kr.hhplus.be.server.domain.model.Reservation
 import kr.hhplus.be.server.domain.repo.ReservationRepo
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
+@Service
 class ReservationService(
     private val reservationRepo: ReservationRepo
 ) {

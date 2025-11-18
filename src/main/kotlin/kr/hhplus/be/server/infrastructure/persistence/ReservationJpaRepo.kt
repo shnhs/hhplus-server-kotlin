@@ -5,6 +5,7 @@ import kr.hhplus.be.server.domain.model.ReservationStatus
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 interface SpringReservationJpa : JpaRepository<ReservationEntity, Long> {
@@ -22,6 +23,7 @@ interface SpringReservationJpa : JpaRepository<ReservationEntity, Long> {
     fun findByScheduleIdAndStatusIn(scheduleId: String, status: List<ReservationStatus>): List<ReservationEntity>
 }
 
+@Repository
 class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRepo {
     override fun save(reservation: Reservation): Reservation {
         val entity = toEntity(reservation)

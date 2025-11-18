@@ -4,7 +4,9 @@ import kr.hhplus.be.server.domain.model.Payment
 import kr.hhplus.be.server.domain.repo.PaymentRepo
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import kr.hhplus.be.server.domain.repo.UserRepo
+import org.springframework.stereotype.Service
 
+@Service
 class PaymentService(
     private val paymentRepo: PaymentRepo,
     private val reservationRepo: ReservationRepo,
