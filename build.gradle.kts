@@ -60,6 +60,7 @@ dependencies {
     testImplementation("io.mockk:mockk-jvm:1.13.11")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:1.3.0")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
