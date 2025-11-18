@@ -31,13 +31,11 @@ class ConcertScheduleServiceTest : BehaviorSpec({
             Reservation.create(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
-                seatNumber = 9,
-                userId = "USER_ID01"
+                seatNumber = 9
             ), Reservation.create(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
-                seatNumber = 19,
-                userId = "USER_ID02"
+                seatNumber = 19
             )
         )
 

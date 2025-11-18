@@ -3,36 +3,46 @@ package kr.hhplus.be.server.domain.model
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldBeUUID
 import java.time.LocalDateTime
 
 class ReservationTest : BehaviorSpec({
-    given("새로운 예약 생성 시") {
-        `when`("create 메서드가 호출된다") {
+    given("예약 시도 시") {
+        `when`("예약 가능한 항목은") {
             val reservation = Reservation.create(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
-                seatNumber = 8,
-                userId = "USER_ID"
+                seatNumber = 8
             )
 
-            then("기본 상태는 PENDING 이다.") {
-                reservation.getStatus() shouldBe ReservationStatus.PENDING
+            then("예약자명이 비어있다.") {
+                reservation.getUserId() shouldBe null
             }
 
-            then("필드가 정상적으로 설정된다.") {
-                reservation.getUuid().shouldBeUUID()
-                reservation.getConcertId() shouldBe "CONCERT_ID"
-                reservation.getScheduleId() shouldBe "SCHEDULE_ID"
-                reservation.getSeatNumber() shouldBe 8
-                reservation.getUserId() shouldBe "USER_ID"
+            then("예약가능 상태로 조회된다.") {
+                reservation.isAvailable() shouldBe true
             }
         }
     }
 
-    given("예약 생성 후") {
+    given("예약가능한 일정이 있을 때") {
+        val reservation = Reservation.create(
+            concertId = "CONCERT_ID",
+            scheduleId = "SCHEDULE_ID",
+            seatNumber = 8
+        )
+        `when`("예약을 시도하면") {
+            val reservationUser: String = "USER_01"
+            reservation.reserve(reservationUser)
+            then("사용자에게 임시점유되고 PENDING 상태가 된다.") {
+                reservation.getUserId() shouldBe reservationUser
+                reservation.getStatus() shouldBe ReservationStatus.PENDING
+            }
+        }
+    }
+
+    given("예약 임시점유 후") {
         `when`("4분까지 지났을 땐") {
-            val reservation = Reservation.Companion.createWithUuid(
+            val reservation = Reservation.createWithUuid(
                 uuid = "UUID",
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
@@ -45,8 +55,8 @@ class ReservationTest : BehaviorSpec({
                 reservation.isExpired() shouldBe false
             }
         }
-        `when`("5분이 넘어갔을 경우") {
-            val reservation = Reservation.Companion.createWithUuid(
+        `when`("임시 점유 후 5분이 넘어갔을 경우") {
+            val reservation = Reservation.createWithUuid(
                 uuid = "UUID",
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
@@ -62,7 +72,7 @@ class ReservationTest : BehaviorSpec({
     }
 
     given("만료되지 않은 예약은") {
-        val reservation = Reservation.Companion.createWithUuid(
+        val reservation = Reservation.createWithUuid(
             uuid = "UUID",
             concertId = "CONCERT_ID",
             scheduleId = "SCHEDULE_ID",

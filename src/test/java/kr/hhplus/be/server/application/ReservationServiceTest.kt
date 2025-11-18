@@ -16,21 +16,29 @@ class ReservationServiceTest : BehaviorSpec({
     val reservationRepo = mockk<ReservationRepo>()
     val reservationService = ReservationService(reservationRepo)
 
-    given("좌석이 비어있을 때") {
+    given("좌석이 아직 예약가능할 때") {
         every {
             reservationRepo.findByConcertIdAndScheduleIdAndSeatNumber(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
                 seatNumber = 9
             )
-        } returns null
+        } returns Reservation.createWithUuid(
+            uuid = "UUID01",
+            concertId = "CONCERT_ID",
+            scheduleId = "SCHEDULE_ID",
+            seatNumber = 9,
+            userId = null,
+            reservedAt = null,
+            status = ReservationStatus.AVAILABLE
+        )
 
         // Repo save 모킹
         every {
             reservationRepo.save(any())
         } answers { firstArg() }
 
-        `when`("예약을 시도하면") {
+        `when`("예약을 요청하면") {
             val result = reservationService.reserve(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
@@ -46,20 +54,25 @@ class ReservationServiceTest : BehaviorSpec({
             }
         }
     }
-    given("이미 예약된 좌석이라면") {
-        val reservation = Reservation.create(
+    given("이미 선택된 좌석이라면") {
+        val pendingReservation = Reservation.createWithUuid(
+            uuid = "UUID01",
             concertId = "CONCERT_ID",
             scheduleId = "SCHEDULE_ID",
             seatNumber = 9,
-            userId = "USER_ID"
+            userId = "USER_ALREADY",
+            reservedAt = LocalDateTime.now().minusMinutes(1),
+            status = ReservationStatus.PENDING
         )
+
         every {
             reservationRepo.findByConcertIdAndScheduleIdAndSeatNumber(
                 concertId = "CONCERT_ID",
                 scheduleId = "SCHEDULE_ID",
                 seatNumber = 9
             )
-        } returns reservation
+        } returns pendingReservation
+
         `when`("예약을 시도하면") {
             then("예외가 발생한다.") {
                 shouldThrow<IllegalStateException> {
@@ -67,8 +80,7 @@ class ReservationServiceTest : BehaviorSpec({
                         concertId = "CONCERT_ID",
                         scheduleId = "SCHEDULE_ID",
                         seatNumber = 9,
-                        userId = "USER_ID"
-
+                        userId = "USER_LATE"
                     )
                 }
             }

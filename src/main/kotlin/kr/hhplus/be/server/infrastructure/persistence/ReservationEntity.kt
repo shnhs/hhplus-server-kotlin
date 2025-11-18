@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.infrastructure.persistence
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.domain.model.ReservationStatus
 import java.time.LocalDateTime
 import java.util.*
 
@@ -30,13 +31,13 @@ class ReservationEntity {
     @Column(nullable = false)
     var seatNumber: Int = 0
 
-    @Column(nullable = false)
-    var userId: String = ""
+    @Column(nullable = true)
+    var userId: String? = null
 
-    @Column(nullable = false)
-    var reservedAt: LocalDateTime = LocalDateTime.now()
+    @Column(nullable = true)
+    var reservedAt: LocalDateTime? = null
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: String = "PENDING"
+    var status: ReservationStatus = ReservationStatus.PENDING
 }

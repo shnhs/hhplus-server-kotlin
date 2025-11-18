@@ -17,6 +17,7 @@ class ReservationDto {
         val scheduleId: String,
         val seatNumber: Int,
         val status: String,
-        val reservedAt: LocalDateTime
+        val userId: String?,
+        val reservedAt: LocalDateTime?
     )
 }
