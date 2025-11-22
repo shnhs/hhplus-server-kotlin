@@ -2,7 +2,9 @@ package kr.hhplus.be.server.application
 
 import kr.hhplus.be.server.domain.model.ReservationToken
 import kr.hhplus.be.server.domain.repo.ReservationTokenRepo
+import org.springframework.stereotype.Service
 
+@Service
 class ReservationTokenService(
     private val reservationTokenRepo: ReservationTokenRepo
 ) {

@@ -17,7 +17,7 @@ class PaymentController(
     /**
      * 예약결제
      */
-    @PostMapping("/{reservationId)")
+    @PostMapping("/{reservationId}")
     fun postPayment(@PathVariable reservationId: String)
             : CommonResponseDto<PaymentResponseDto> {
         val payment = paymentService.postPayment(reservationId = reservationId)

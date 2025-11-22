@@ -3,12 +3,13 @@ package kr.hhplus.be.server.infrastructure.persistence
 import kr.hhplus.be.server.domain.model.Payment
 import kr.hhplus.be.server.domain.repo.PaymentRepo
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 
 interface SpringPaymentJpa : JpaRepository<PaymentEntity, Long> {
     fun findByUuid(uuid: String): PaymentEntity?
 }
 
-
+@Repository
 class PaymentJpaRepo(
     private val jpa: SpringPaymentJpa
 ) : PaymentRepo {

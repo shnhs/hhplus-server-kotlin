@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 enum class ReservationStatus {
+    AVAILABLE,
     PENDING,
     EXPIRED,
     CONFIRMED
@@ -15,25 +16,25 @@ class Reservation(
     private val concertId: String,
     private val scheduleId: String,
     private val seatNumber: Int,
-    private val userId: String,
-    private val reservedAt: LocalDateTime
+    private var userId: String?,
+    private var reservedAt: LocalDateTime?,
+    private var status: ReservationStatus
 ) {
-    private var status: ReservationStatus = ReservationStatus.PENDING
 
     companion object {
-        fun create(
+        fun create( // 콘서트 일정 생성용
             concertId: String,
             scheduleId: String,
-            seatNumber: Int,
-            userId: String
+            seatNumber: Int
         ): Reservation {
             return Reservation(
                 uuid = UUID.randomUUID().toString(),
                 concertId = concertId,
                 scheduleId = scheduleId,
                 seatNumber = seatNumber,
-                userId = userId,
-                reservedAt = LocalDateTime.now()
+                userId = null, // 예약자 없음
+                reservedAt = null,
+                status = ReservationStatus.AVAILABLE
             )
         }
 
@@ -43,8 +44,8 @@ class Reservation(
             concertId: String,
             scheduleId: String,
             seatNumber: Int,
-            userId: String,
-            reservedAt: LocalDateTime,
+            userId: String?,
+            reservedAt: LocalDateTime?,
             status: ReservationStatus
         ): Reservation {
             return Reservation(
@@ -54,15 +55,29 @@ class Reservation(
                 seatNumber = seatNumber,
                 userId = userId,
                 reservedAt = reservedAt,
-            ).apply {
-                this.status = status
-            }
+                status = status
+            )
         }
     }
 
-    // 만료 확인
+    // 예약 가능 여부 확인
+    fun isAvailable(): Boolean {
+        return userId == null && status == ReservationStatus.AVAILABLE
+    }
+
+    // 예약 처리(임시점유)
+    fun reserve(userId: String) {
+        if (!isAvailable()) {
+            throw IllegalStateException("예약할 수 없는 상태입니다.")
+        }
+        this.userId = userId
+        this.reservedAt = LocalDateTime.now()
+        this.status = ReservationStatus.PENDING
+    }
+
+    // 임시점유 만료확인
     fun isExpired(): Boolean {
-        return reservedAt.plusMinutes(5).isBefore(LocalDateTime.now())
+        return reservedAt?.plusMinutes(5)!!.isBefore(LocalDateTime.now())
     }
 
     // 예약 확정 (결제 완료 시)
@@ -83,16 +98,17 @@ class Reservation(
             this.scheduleId,
             this.seatNumber,
             this.status.name,
+            this.userId,
             this.reservedAt
         )
     }
-    
+
     // Getters
     fun getUuid(): String = uuid
     fun getConcertId(): String = concertId
     fun getScheduleId(): String = scheduleId
     fun getSeatNumber(): Int = seatNumber
-    fun getUserId(): String = userId
+    fun getUserId(): String? = userId
     fun getStatus(): ReservationStatus = status
-    fun getReservedAt(): LocalDateTime = reservedAt
+    fun getReservedAt(): LocalDateTime? = reservedAt
 }
