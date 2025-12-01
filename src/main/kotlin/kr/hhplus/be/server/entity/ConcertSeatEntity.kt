@@ -1,19 +1,16 @@
 package kr.hhplus.be.server.entity
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertScheduleResponseDto
+import kr.hhplus.be.server.enums.ReservationStatus
+import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertSeatResponseDto
 import org.hibernate.annotations.Comment
-import java.time.LocalDateTime
 import java.util.*
 
 @Entity
 @Table(
-    name = "bc_concert_schedule",
-    uniqueConstraints = [
-        UniqueConstraint(columnNames = ["concertId", "concertDate"])
-    ]
+    name = "bd_concert_seat"
 )
-class ConcertScheduleEntity {
+class ConcertSeatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -33,14 +30,22 @@ class ConcertScheduleEntity {
     var concertId: String = ""
 
     @Column(nullable = false)
-    @Comment(value = "공연일자")
-    var concertDate: LocalDateTime = LocalDateTime.now()
+    @Comment(value = "콘서트 일정 ID")
+    var concertScheduleId: String = ""
 
-    fun toDto(): ConcertScheduleResponseDto {
-        return ConcertScheduleResponseDto(
-            scheduleId = this.uuid,
+    @Comment(value = "좌석번호")
+    var seatNumber: Int = 0
+
+    @Comment(value = "예약상태")
+    @Enumerated(EnumType.STRING)
+    var status: ReservationStatus = ReservationStatus.AVAILABLE
+
+    fun toDto(): ConcertSeatResponseDto {
+        return ConcertSeatResponseDto(
             concertId = this.concertId,
-            concertDate = this.concertDate
+            scheduleId = this.concertScheduleId,
+            seatNumber = this.seatNumber,
+            status = this.status
         )
     }
 }
