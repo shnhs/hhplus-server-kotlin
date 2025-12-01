@@ -2,8 +2,8 @@ package kr.hhplus.be.server.infrastructure.persistence
 
 import jakarta.persistence.LockModeType
 import kr.hhplus.be.server.domain.model.Reservation
-import kr.hhplus.be.server.domain.model.ReservationStatus
 import kr.hhplus.be.server.domain.repo.ReservationRepo
+import kr.hhplus.be.server.enums.ReservationStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -89,16 +89,6 @@ class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRep
 
     override fun findExpiredReservation(): List<Reservation> {
         TODO("Not yet implemented")
-    }
-
-    override fun findByScheduleIdAndStatusIn(
-        scheduleId: String, status: List<ReservationStatus>
-    ): List<Reservation> {
-        val reservations = jpa.findByScheduleIdAndStatusIn(
-            scheduleId, status
-        )
-
-        return reservations.map { toDomain(it) }.toList()
     }
 
     override fun deleteAll() {

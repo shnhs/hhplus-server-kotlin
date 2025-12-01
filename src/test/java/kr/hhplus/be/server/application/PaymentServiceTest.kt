@@ -6,11 +6,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kr.hhplus.be.server.domain.model.Reservation
-import kr.hhplus.be.server.domain.model.ReservationStatus
 import kr.hhplus.be.server.domain.model.User
 import kr.hhplus.be.server.domain.repo.PaymentRepo
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import kr.hhplus.be.server.domain.repo.UserRepo
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 
 class PaymentServiceTest : BehaviorSpec({

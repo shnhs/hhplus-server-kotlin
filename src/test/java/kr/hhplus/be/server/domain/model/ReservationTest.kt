@@ -3,6 +3,7 @@ package kr.hhplus.be.server.domain.model
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 
 class ReservationTest : BehaviorSpec({

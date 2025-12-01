@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.persistence
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.domain.model.ReservationStatus
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 import java.util.*
 

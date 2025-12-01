@@ -1,15 +1,10 @@
 package kr.hhplus.be.server.domain.model
 
+import kr.hhplus.be.server.enums.ReservationStatus
 import kr.hhplus.be.server.interfaces.dto.ReservationDto.ReservationResponseDto
 import java.time.LocalDateTime
 import java.util.*
 
-enum class ReservationStatus {
-    AVAILABLE,
-    PENDING,
-    EXPIRED,
-    CONFIRMED
-}
 
 class Reservation(
     private val uuid: String,
