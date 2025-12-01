@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.interfaces.web
 
+import io.swagger.v3.oas.annotations.Operation
 import kr.hhplus.be.server.application.ConcertService
 import kr.hhplus.be.server.interfaces.dto.CommonResponseDto
 import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertResponseDto
@@ -18,6 +19,10 @@ class ConcertController(
     /**
      * 특정 콘서트의 상세정보 조회(스케줄 목록 조회)
      */
+    @Operation(
+        summary = "특정 콘서트 스케줄 목록 조회",
+        description = ""
+    )
     @GetMapping("/{concertId}")
     fun getConcertSchedules(@PathVariable concertId: String)
             : CommonResponseDto<ConcertResponseDto> {
