@@ -42,6 +42,7 @@ class ConcertSeatEntity {
 
     fun toDto(): ConcertSeatResponseDto {
         return ConcertSeatResponseDto(
+            seatId = this.uuid,
             concertId = this.concertId,
             scheduleId = this.concertScheduleId,
             seatNumber = this.seatNumber,

@@ -3,7 +3,6 @@ package kr.hhplus.be.server.entity
 import jakarta.persistence.*
 import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertResponseDto
 import org.hibernate.annotations.Comment
-import java.time.LocalDateTime
 import java.util.*
 
 @Entity
@@ -36,14 +35,12 @@ class ConcertEntity {
     @Comment(value = "콘서트 홀")
     var concertHall: String = ""
 
-    fun toDto(availableSchedules: List<LocalDateTime>)
-            : ConcertResponseDto {
+    fun toDto(): ConcertResponseDto {
         return ConcertResponseDto(
             concertId = this.uuid,
             concertName = this.concertName,
             artist = this.artist,
-            concertHall = this.concertHall,
-            availableSchedules = availableSchedules
+            concertHall = this.concertHall
         )
     }
 }

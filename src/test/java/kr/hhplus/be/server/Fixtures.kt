@@ -2,6 +2,7 @@ package kr.hhplus.be.server
 
 import kr.hhplus.be.server.entity.ConcertEntity
 import kr.hhplus.be.server.entity.ConcertScheduleEntity
+import kr.hhplus.be.server.entity.ConcertSeatEntity
 import java.time.LocalDateTime
 import java.util.*
 
@@ -19,15 +20,15 @@ class Fixtures {
     fun concertSchedule(
         concertId: String,
         startDate: LocalDateTime,
-        performanceCount: Int,
-        seatCount: Int
+        concertDays: Int,
+        maxSeatNumber: Int
     ): List<ConcertScheduleEntity> {
         val schedules = mutableListOf<ConcertScheduleEntity>()
 
-        repeat(performanceCount) { dayOffset ->
+        repeat(concertDays) { dayOffset ->
             val concertDate = startDate.plusDays(dayOffset.toLong())
 
-            repeat(seatCount) { seatNumber ->
+            repeat(maxSeatNumber) { seatNumber ->
                 schedules.add(
                     ConcertScheduleEntity().apply {
                         this.concertId = concertId
@@ -38,6 +39,18 @@ class Fixtures {
         }
 
         return schedules
+    }
+
+    fun concertSeat(
+        concertId: String, concertScheduleId: String, maxSeatNumber: Int
+    ): List<ConcertSeatEntity> {
+        return (1..maxSeatNumber).map {
+            ConcertSeatEntity().apply {
+                this.concertId = concertId
+                this.concertScheduleId = concertScheduleId
+                this.seatNumber = it
+            }
+        }
     }
 
 }

@@ -2,69 +2,66 @@ package kr.hhplus.be.server.application
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import kr.hhplus.be.server.domain.model.Reservation
-import kr.hhplus.be.server.domain.model.ReservationStatus
-import kr.hhplus.be.server.domain.repo.ReservationRepo
-import kr.hhplus.be.server.entity.ConcertScheduleEntity
+import kr.hhplus.be.server.Fixtures
 import kr.hhplus.be.server.infrastructure.persistence.ConcertScheduleJpaRepo
+import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertScheduleResponseDto
+import java.time.LocalDateTime
 
 class ConcertScheduleServiceTest : BehaviorSpec({
     val concertScheduleJpaRepo = mockk<ConcertScheduleJpaRepo>()
-    val reservationRepo = mockk<ReservationRepo>()
     val concertScheduleService = ConcertScheduleService(
-        concertScheduleJpaRepo, reservationRepo
+        concertScheduleJpaRepo
     )
 
-    given("유효한 스케줄 아이디가 있을 경우") {
-        every {
-            reservationRepo.findByScheduleIdAndStatusIn(
-                scheduleId = "SCHEDULE_ID",
-                status = listOf(
-                    ReservationStatus.CONFIRMED, ReservationStatus.PENDING
-                )
-            )
-        } returns listOf(
-            Reservation.create(
-                concertId = "CONCERT_ID",
-                scheduleId = "SCHEDULE_ID",
-                seatNumber = 9
-            ), Reservation.create(
-                concertId = "CONCERT_ID",
-                scheduleId = "SCHEDULE_ID",
-                seatNumber = 19
-            )
+    val fixture = Fixtures()
+
+    given("유효한 콘서트 스케줄 아이디가 있을 경우") {
+        val testConcertId = "CONCERT_ID"
+        val concertDays = 3
+        val maxSeatNumber = 10
+
+        val testConcertSchedules = fixture.concertSchedule(
+            concertId = testConcertId,
+            startDate = LocalDateTime.of(
+                2025, 12, 23,
+                18, 30
+            ),
+            concertDays = concertDays,
+            maxSeatNumber = maxSeatNumber
         )
 
         every {
-            concertScheduleJpaRepo.findByUuid("SCHEDULE_ID")
-        } returns ConcertScheduleEntity()
-
-        `when`("예약가능한 좌석을 조회할 경우") {
-            val scheduleResponseDto = concertScheduleService.getAvailableSeats(
-                scheduleId = "SCHEDULE_ID"
+            concertScheduleJpaRepo.findByConcertId(
+                concertId = testConcertId
             )
+        } returns testConcertSchedules
 
-            then("정상적으로 예약가능한 좌석번호들이 조회된다.") {
-                scheduleResponseDto.availableSeats.size shouldBe 48
-                scheduleResponseDto.availableSeats shouldNotContain 9
-                scheduleResponseDto.availableSeats shouldNotContain 19
+        `when`("해당 콘서트 일정의 정보를 조회할 경우") {
+            val schedules: List<ConcertScheduleResponseDto> =
+                concertScheduleService.getSchedules(testConcertId)
+            then("정상적으로 조회된다.") {
+                schedules.size shouldBe concertDays * maxSeatNumber
+                schedules.first().concertId shouldBe testConcertId
             }
         }
     }
 
-    given("유효하지 않는 스케줄 아이디가 입력되었을때") {
-        every {
-            concertScheduleJpaRepo.findByUuid("INVALID_ID")
-        } returns null
+    given("유효하지 않은 콘서트 아이디가 있다면") {
+        val invalidConcertId = "INVALID_CONCERT_ID"
 
-        `when`("예약가능 좌석을 조회하면") {
+        every {
+            concertScheduleJpaRepo.findByConcertId(
+                concertId = invalidConcertId
+            )
+        } returns emptyList()
+
+        `when`("콘서트 일정 정보를 조회할 경우") {
             then("에러가 발생한다.") {
-                shouldThrow<IllegalStateException> {
-                    concertScheduleService.getAvailableSeats("INVALID_ID")
+                shouldThrow<IllegalArgumentException> {
+                    concertScheduleService.getSchedules(invalidConcertId)
                 }
             }
         }

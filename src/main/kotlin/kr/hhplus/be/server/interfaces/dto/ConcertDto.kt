@@ -9,8 +9,7 @@ class ConcertDto {
         val concertId: String,
         val concertName: String,
         val artist: String,
-        val concertHall: String,
-        val availableSchedules: List<LocalDateTime>
+        val concertHall: String
     )
 
     data class ConcertScheduleResponseDto(
@@ -20,6 +19,7 @@ class ConcertDto {
     )
 
     data class ConcertSeatResponseDto(
+        val seatId: String,
         val concertId: String,
         val scheduleId: String,
         val seatNumber: Int,
