@@ -18,7 +18,7 @@ class ConcertSeatServiceTest : BehaviorSpec({
     val testConcertScheduleId = "TEST_CONCERT_SCHEDULE_ID"
     val maxSeatNumber = 10
 
-    val testConcertSeats = Fixtures().concertSeat(
+    val testConcertSeats = Fixtures().concertSeats(
         concertId = testConcertId,
         concertScheduleId = testConcertScheduleId,
         maxSeatNumber = maxSeatNumber

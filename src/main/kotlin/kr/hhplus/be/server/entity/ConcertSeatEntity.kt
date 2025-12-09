@@ -36,9 +36,31 @@ class ConcertSeatEntity {
     @Comment(value = "좌석번호")
     var seatNumber: Int = 0
 
+    @Column(nullable = false)
     @Comment(value = "예약상태")
     @Enumerated(EnumType.STRING)
     var status: ReservationStatus = ReservationStatus.AVAILABLE
+        private set  // setter를 private으로 제한
+
+    // 상태 변경 메서드
+    fun reserve() {
+        if (this.status != ReservationStatus.AVAILABLE) {
+            throw IllegalStateException("이미 선택된 좌석입니다.")
+        }
+        this.status = ReservationStatus.PENDING
+    }
+
+    fun confirm() {
+        if (this.status != ReservationStatus.PENDING) {
+            throw IllegalStateException("예약 상태가 아닙니다.")
+        }
+        this.status = ReservationStatus.CONFIRMED
+    }
+
+    fun release() {
+        this.status = ReservationStatus.AVAILABLE
+    }
+
 
     fun toDto(): ConcertSeatResponseDto {
         return ConcertSeatResponseDto(
@@ -49,4 +71,21 @@ class ConcertSeatEntity {
             status = this.status
         )
     }
+
+
+    constructor()
+
+    // 테스트용 생성자
+    constructor(
+        concertId: String,
+        concertScheduleId: String,
+        seatNumber: Int,
+        status: ReservationStatus
+    ) {
+        this.concertId = concertId
+        this.concertScheduleId = concertScheduleId
+        this.seatNumber = seatNumber
+        this.status = status  // 생성자 내부에서는 private set 무시됨
+    }
 }
+

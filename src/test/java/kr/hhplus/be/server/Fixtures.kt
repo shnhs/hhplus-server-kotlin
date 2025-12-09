@@ -3,6 +3,7 @@ package kr.hhplus.be.server
 import kr.hhplus.be.server.entity.ConcertEntity
 import kr.hhplus.be.server.entity.ConcertScheduleEntity
 import kr.hhplus.be.server.entity.ConcertSeatEntity
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 import java.util.*
 
@@ -41,7 +42,7 @@ class Fixtures {
         return schedules
     }
 
-    fun concertSeat(
+    fun concertSeats(
         concertId: String, concertScheduleId: String, maxSeatNumber: Int
     ): List<ConcertSeatEntity> {
         return (1..maxSeatNumber).map {
@@ -51,6 +52,15 @@ class Fixtures {
                 this.seatNumber = it
             }
         }
+    }
+
+    fun concertSeat(
+        concertId: String,
+        concertScheduleId: String,
+        seatNumber: Int,
+        status: ReservationStatus
+    ): ConcertSeatEntity {
+        return ConcertSeatEntity(concertId, concertScheduleId, seatNumber, status)
     }
 
 }
