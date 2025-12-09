@@ -17,9 +17,7 @@ class ReservationController(
             : CommonResponseDto<ReservationResponseDto> {
         val reservation =
             reservationService.reserve(
-                concertId = request.concertId,
-                scheduleId = request.scheduleId,
-                seatNumber = request.seatNumber,
+                seatId = request.seatId,
                 userId = request.userId
             )
         return CommonResponseDto<ReservationResponseDto>(reservation.toDto())

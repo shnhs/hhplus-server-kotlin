@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.ReservationService
 import kr.hhplus.be.server.domain.repo.ReservationRepo
-import kr.hhplus.be.server.fixture.ReservationFixture
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.util.concurrent.CountDownLatch
@@ -19,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ReservationIntegrationTest(
     private val reservationService: ReservationService,
     private val reservationRepo: ReservationRepo,
-    private val reservationFixture: ReservationFixture
+    private val persistenceFixtures: PersistenceFixtures
 ) : BehaviorSpec({
 
     beforeSpec {
@@ -33,7 +32,7 @@ class ReservationIntegrationTest(
         val userCount = 5 // 동시요청 수
 
         // Fixture로 초기화
-        reservationFixture.createAvailableSeats(
+        val createAvailableSeatIds = persistenceFixtures.createAvailableSeats(
             concertId = concertId, scheduleId = scheduleId, seatCount = 5
         )
 
@@ -49,10 +48,9 @@ class ReservationIntegrationTest(
                         latch.countDown()
                         latch.await() // 모든 스레드가 동시에 시작하도록 대기
 
+                        // 모두 동시에 같은 좌석 예약시도
                         reservationService.reserve(
-                            concertId = concertId,
-                            scheduleId = scheduleId,
-                            seatNumber = seatNumber,
+                            seatId = createAvailableSeatIds.first(),
                             userId = "USER_$userId"
                         )
                         successCount.incrementAndGet()
@@ -75,10 +73,8 @@ class ReservationIntegrationTest(
             }
 
             then("DB에는 예약자가 기록된다") {
-                val reservation = reservationRepo.findByConcertIdAndScheduleIdAndSeatNumberWithoutLock(
-                    concertId = concertId,
-                    scheduleId = scheduleId,
-                    seatNumber = seatNumber
+                val reservation = reservationRepo.findBySeatId(
+                    createAvailableSeatIds.first()
                 )
 
                 reservation shouldNotBe null

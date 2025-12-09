@@ -20,7 +20,7 @@ class PaymentService(
 
         // 사용자 포인트
         val userId = reservation.getUserId()
-        val user = userId?.let { userRepo.findByUuid(it) }
+        val user = userRepo.findByUuid(userId)
         user!!.usePoint(50000) // TODO 티켓가격로직 설정 필요
 
         reservation.confirm() // 예약확정 처리
