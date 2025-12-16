@@ -1,37 +1,20 @@
 package kr.hhplus.be.server.infrastructure.persistence
 
-import jakarta.persistence.LockModeType
 import kr.hhplus.be.server.domain.model.Reservation
-import kr.hhplus.be.server.domain.model.ReservationStatus
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 interface SpringReservationJpa : JpaRepository<ReservationEntity, Long> {
-    // 락 없는 일반 조회 (테스트, 단순 확인용)
-    fun findTopByConcertIdAndScheduleIdAndSeatNumber(
-        concertId: String,
-        scheduleId: String,
-        seatNumber: Int
-    ): ReservationEntity?
-
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    fun findByConcertIdAndScheduleIdAndSeatNumber(
-        concertId: String,
-        scheduleId: String,
-        seatNumber: Int
-    ): ReservationEntity
 
     fun findByUuid(uuid: String): ReservationEntity?
 
+    fun findBySeatId(seatId: String): ReservationEntity?
+
     @Query("SELECT r FROM ReservationEntity r WHERE r.status = 'PENDING' AND r.reservedAt < :expiredTime")
     fun findExpiredReservations(expiredTime: LocalDateTime): List<ReservationEntity>
-
-    fun findByScheduleIdAndStatusIn(scheduleId: String, status: List<ReservationStatus>): List<ReservationEntity>
 }
 
 @Repository
@@ -55,33 +38,6 @@ class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRep
         }
     }
 
-    // 락없는 일반조회
-    override fun findByConcertIdAndScheduleIdAndSeatNumberWithoutLock(
-        concertId: String,
-        scheduleId: String,
-        seatNumber: Int
-    ): Reservation? {
-        val entity = jpa.findTopByConcertIdAndScheduleIdAndSeatNumber(
-            concertId, scheduleId, seatNumber
-        )
-        return entity?.let { toDomain(it) }
-
-    }
-
-    // Lock 걸고 조회
-    override fun findByConcertIdAndScheduleIdAndSeatNumber(
-        concertId: String,
-        scheduleId: String,
-        seatNumber: Int
-    ): Reservation {
-        val entity = jpa.findByConcertIdAndScheduleIdAndSeatNumber(
-            concertId,
-            scheduleId,
-            seatNumber
-        )
-        return toDomain(entity)
-    }
-
     override fun findByUuid(uuid: String): Reservation? {
         val entity = jpa.findByUuid(uuid)
         return entity?.let { toDomain(it) }
@@ -91,14 +47,9 @@ class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRep
         TODO("Not yet implemented")
     }
 
-    override fun findByScheduleIdAndStatusIn(
-        scheduleId: String, status: List<ReservationStatus>
-    ): List<Reservation> {
-        val reservations = jpa.findByScheduleIdAndStatusIn(
-            scheduleId, status
-        )
-
-        return reservations.map { toDomain(it) }.toList()
+    override fun findBySeatId(seatId: String): Reservation? {
+        val entity = jpa.findBySeatId(seatId)
+        return entity?.let { toDomain(it) }
     }
 
     override fun deleteAll() {
@@ -109,9 +60,8 @@ class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRep
     private fun toEntity(reservation: Reservation): ReservationEntity {
         return ReservationEntity().apply {
             uuid = reservation.getUuid()
-            concertId = reservation.getConcertId()
             scheduleId = reservation.getScheduleId()
-            seatNumber = reservation.getSeatNumber()
+            seatId = reservation.getSeatId()
             userId = reservation.getUserId()
             reservedAt = reservation.getReservedAt()
             status = reservation.getStatus()
@@ -123,9 +73,8 @@ class ReservationJpaRepo(private val jpa: SpringReservationJpa) : ReservationRep
         // UUID 기반으로 도메인 객체 재구성
         return Reservation.createWithUuid(
             uuid = entity.uuid,
-            concertId = entity.concertId,
             scheduleId = entity.scheduleId,
-            seatNumber = entity.seatNumber,
+            seatId = entity.seatId,
             userId = entity.userId,
             reservedAt = entity.reservedAt,
             status = entity.status

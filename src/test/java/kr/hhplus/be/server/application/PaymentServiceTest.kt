@@ -6,11 +6,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kr.hhplus.be.server.domain.model.Reservation
-import kr.hhplus.be.server.domain.model.ReservationStatus
 import kr.hhplus.be.server.domain.model.User
 import kr.hhplus.be.server.domain.repo.PaymentRepo
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import kr.hhplus.be.server.domain.repo.UserRepo
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 
 class PaymentServiceTest : BehaviorSpec({
@@ -29,9 +29,8 @@ class PaymentServiceTest : BehaviorSpec({
             reservationRepo.findByUuid("RESERVATION_ID")
         } returns Reservation.createWithUuid(
             uuid = "RESERVATION_ID",
-            concertId = "CONCERT_ID",
             scheduleId = "SCHEDULE_ID",
-            seatNumber = 18,
+            seatId = "SEAT_ID",
             userId = "USER_ID",
             reservedAt = LocalDateTime.now().minusMinutes(3),
             status = ReservationStatus.PENDING
@@ -53,7 +52,7 @@ class PaymentServiceTest : BehaviorSpec({
             val payment = paymentService.postPayment(
                 reservationId = "RESERVATION_ID"
             )
-            then("정상적으로 예약이 생성된다.") {
+            then("정상적으로 결제내역이 생성된다.") {
                 payment.getReservationId() shouldBe "RESERVATION_ID"
             }
         }

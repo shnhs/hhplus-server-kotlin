@@ -1,58 +1,49 @@
 package kr.hhplus.be.server.domain.model
 
+import kr.hhplus.be.server.enums.ReservationStatus
 import kr.hhplus.be.server.interfaces.dto.ReservationDto.ReservationResponseDto
 import java.time.LocalDateTime
 import java.util.*
 
-enum class ReservationStatus {
-    AVAILABLE,
-    PENDING,
-    EXPIRED,
-    CONFIRMED
-}
 
 class Reservation(
     private val uuid: String,
-    private val concertId: String,
     private val scheduleId: String,
-    private val seatNumber: Int,
-    private var userId: String?,
-    private var reservedAt: LocalDateTime?,
+    private val seatId: String,
+    private var userId: String,
+    private var reservedAt: LocalDateTime,
     private var status: ReservationStatus
 ) {
 
     companion object {
         fun create( // 콘서트 일정 생성용
-            concertId: String,
             scheduleId: String,
-            seatNumber: Int
+            seatId: String,
+            userId: String
         ): Reservation {
             return Reservation(
                 uuid = UUID.randomUUID().toString(),
-                concertId = concertId,
                 scheduleId = scheduleId,
-                seatNumber = seatNumber,
-                userId = null, // 예약자 없음
-                reservedAt = null,
-                status = ReservationStatus.AVAILABLE
+                seatId = seatId,
+                userId = userId,
+                reservedAt = LocalDateTime.now(),
+                status = ReservationStatus.PENDING // 좌석 임시점유
             )
         }
 
         // Infrastructure에서 DB 데이터로 도메인 객체 재구성할 때 사용
         fun createWithUuid(
             uuid: String,
-            concertId: String,
             scheduleId: String,
-            seatNumber: Int,
-            userId: String?,
-            reservedAt: LocalDateTime?,
+            seatId: String,
+            userId: String,
+            reservedAt: LocalDateTime,
             status: ReservationStatus
         ): Reservation {
             return Reservation(
                 uuid = uuid,
-                concertId = concertId,
                 scheduleId = scheduleId,
-                seatNumber = seatNumber,
+                seatId = seatId,
                 userId = userId,
                 reservedAt = reservedAt,
                 status = status
@@ -60,24 +51,9 @@ class Reservation(
         }
     }
 
-    // 예약 가능 여부 확인
-    fun isAvailable(): Boolean {
-        return userId == null && status == ReservationStatus.AVAILABLE
-    }
-
-    // 예약 처리(임시점유)
-    fun reserve(userId: String) {
-        if (!isAvailable()) {
-            throw IllegalStateException("예약할 수 없는 상태입니다.")
-        }
-        this.userId = userId
-        this.reservedAt = LocalDateTime.now()
-        this.status = ReservationStatus.PENDING
-    }
-
     // 임시점유 만료확인
     fun isExpired(): Boolean {
-        return reservedAt?.plusMinutes(5)!!.isBefore(LocalDateTime.now())
+        return reservedAt.plusMinutes(5)!!.isBefore(LocalDateTime.now())
     }
 
     // 예약 확정 (결제 완료 시)
@@ -94,10 +70,9 @@ class Reservation(
     fun toDto(): ReservationResponseDto {
         return ReservationResponseDto(
             this.uuid,
-            this.concertId,
             this.scheduleId,
-            this.seatNumber,
-            this.status.name,
+            this.seatId,
+            this.status,
             this.userId,
             this.reservedAt
         )
@@ -105,10 +80,9 @@ class Reservation(
 
     // Getters
     fun getUuid(): String = uuid
-    fun getConcertId(): String = concertId
     fun getScheduleId(): String = scheduleId
-    fun getSeatNumber(): Int = seatNumber
-    fun getUserId(): String? = userId
+    fun getSeatId(): String = seatId
+    fun getUserId(): String = userId
     fun getStatus(): ReservationStatus = status
-    fun getReservedAt(): LocalDateTime? = reservedAt
+    fun getReservedAt(): LocalDateTime = reservedAt
 }

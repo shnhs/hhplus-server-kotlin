@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.persistence
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.domain.model.ReservationStatus
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 import java.util.*
 
@@ -22,20 +22,18 @@ class ReservationEntity {
         }
     }
 
-    @Column(nullable = false)
-    var concertId: String = ""
 
     @Column(nullable = false)
     var scheduleId: String = ""
 
     @Column(nullable = false)
-    var seatNumber: Int = 0
+    var seatId: String = ""
 
-    @Column(nullable = true)
-    var userId: String? = null
+    @Column(nullable = false)
+    var userId: String = ""
 
-    @Column(nullable = true)
-    var reservedAt: LocalDateTime? = null
+    @Column(nullable = false)
+    var reservedAt: LocalDateTime = LocalDateTime.now()
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

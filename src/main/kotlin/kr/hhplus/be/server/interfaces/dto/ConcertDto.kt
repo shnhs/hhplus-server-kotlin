@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.interfaces.dto
 
+import kr.hhplus.be.server.enums.ReservationStatus
 import java.time.LocalDateTime
 
 class ConcertDto {
@@ -8,7 +9,20 @@ class ConcertDto {
         val concertId: String,
         val concertName: String,
         val artist: String,
-        val concertHall: String,
-        val availableSchedules: List<LocalDateTime>
+        val concertHall: String
+    )
+
+    data class ConcertScheduleResponseDto(
+        val scheduleId: String,
+        val concertId: String,
+        val concertDate: LocalDateTime
+    )
+
+    data class ConcertSeatResponseDto(
+        val seatId: String,
+        val concertId: String,
+        val scheduleId: String,
+        val seatNumber: Int,
+        val status: ReservationStatus
     )
 }

@@ -1,13 +1,18 @@
 package kr.hhplus.be.server.entity
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.interfaces.dto.ConcertScheduleDto.ConcertScheduleResponseDto
+import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertScheduleResponseDto
 import org.hibernate.annotations.Comment
 import java.time.LocalDateTime
 import java.util.*
 
 @Entity
-@Table(name = "bc_concert_schedule")
+@Table(
+    name = "bc_concert_schedule",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["concertId", "concertDate"])
+    ]
+)
 class ConcertScheduleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,15 +36,11 @@ class ConcertScheduleEntity {
     @Comment(value = "공연일자")
     var concertDate: LocalDateTime = LocalDateTime.now()
 
-    @Comment(value = "예약가능한 좌석수")
-    var availableSeats: Int = 50
-
-    fun toDto(availableSeats: List<Int>): ConcertScheduleResponseDto {
+    fun toDto(): ConcertScheduleResponseDto {
         return ConcertScheduleResponseDto(
             scheduleId = this.uuid,
             concertId = this.concertId,
-            concertDate = this.concertDate,
-            availableSeats = availableSeats
+            concertDate = this.concertDate
         )
     }
 }
