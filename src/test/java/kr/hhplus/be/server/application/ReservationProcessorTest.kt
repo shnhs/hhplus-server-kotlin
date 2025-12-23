@@ -13,16 +13,14 @@ import kr.hhplus.be.server.domain.repo.ReservationRepo
 import kr.hhplus.be.server.enums.ReservationStatus
 import kr.hhplus.be.server.infrastructure.persistence.ConcertSeatJpaRepo
 import org.redisson.api.RLock
-import org.redisson.api.RedissonClient
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-class ReservationServiceTest : BehaviorSpec({
+class ReservationProcessorTest : BehaviorSpec({
     val reservationRepo = mockk<ReservationRepo>()
     val concertSeatRepo = mockk<ConcertSeatJpaRepo>()
-    val redissonClient = mockk<RedissonClient>()
-    val reservationService = ReservationService(
-        concertSeatRepo, reservationRepo, redissonClient
+    val reservationProcessor = ReservationProcessor(
+        concertSeatRepo, reservationRepo
     )
     val mockLock = mockk<RLock>(relaxed = true)
 
@@ -34,17 +32,6 @@ class ReservationServiceTest : BehaviorSpec({
     val testSeatNumber = 10
     val testUserId = "TEST_USER"
 
-    // 분산락 기본 설정
-    fun setupDefaultLock(
-        lockAcquired: Boolean = true, isHeld: Boolean = true
-    ) {
-        every { redissonClient.getLock(any()) } returns mockLock
-        every {
-            mockLock.tryLock(5, 10, TimeUnit.SECONDS)
-        } returns lockAcquired
-        every { mockLock.isHeldByCurrentThread } returns isHeld
-    }
-
     given("좌석이 아직 예약가능할 때") {
         val availableTestSeat = fixture.concertSeat(
             concertId = testConcertId,
@@ -53,7 +40,6 @@ class ReservationServiceTest : BehaviorSpec({
             status = ReservationStatus.AVAILABLE
         )
 
-        setupDefaultLock()
 
         every {
             mockLock.tryLock(5, 10, TimeUnit.SECONDS)
@@ -69,7 +55,7 @@ class ReservationServiceTest : BehaviorSpec({
         } answers { firstArg() }
 
         `when`("예약을 요청하면") {
-            val result = reservationService.reserve(
+            val result = reservationProcessor.proceedReservation(
                 seatId = availableTestSeat.uuid,
                 userId = testUserId
             )
@@ -82,11 +68,6 @@ class ReservationServiceTest : BehaviorSpec({
             then("repo의 save가 호출되야 한다.") {
                 verify { reservationRepo.save(any()) }
             }
-
-            then("분산락을 획득하고 해제해야 한다.") {
-                verify { mockLock.tryLock(5, 10, TimeUnit.SECONDS) }
-                verify { mockLock.unlock() }
-            }
         }
     }
 
@@ -97,11 +78,6 @@ class ReservationServiceTest : BehaviorSpec({
             seatNumber = testSeatNumber,
             status = ReservationStatus.PENDING
         )
-        setupDefaultLock()
-
-        every {
-            mockLock.tryLock(5, 10, TimeUnit.SECONDS)
-        } returns true
 
         every {
             concertSeatRepo.findByUuid(pendingTestSeat.uuid)
@@ -110,7 +86,7 @@ class ReservationServiceTest : BehaviorSpec({
         `when`("예약을 시도하면") {
             then("예외가 발생한다.") {
                 shouldThrow<IllegalStateException> {
-                    reservationService.reserve(
+                    reservationProcessor.proceedReservation(
                         seatId = pendingTestSeat.uuid,
                         userId = testUserId
                     )
@@ -130,12 +106,6 @@ class ReservationServiceTest : BehaviorSpec({
             status = ReservationStatus.PENDING
         )
 
-        setupDefaultLock()
-
-        every {
-            mockLock.tryLock(5, 10, TimeUnit.SECONDS)
-        } returns true
-
         every { // repo 모킹
             reservationRepo.findByUuid(testReservationId)
         } returns reservation
@@ -145,7 +115,7 @@ class ReservationServiceTest : BehaviorSpec({
         } answers { firstArg() }
 
         `when`("확정하려고 시도하면") {
-            val confirmReservation = reservationService.confirmReservation(
+            val confirmReservation = reservationProcessor.processConfirm(
                 reservationId = testReservationId
             )
             then("확정 되어야 한다.") {
@@ -159,12 +129,6 @@ class ReservationServiceTest : BehaviorSpec({
 
     given("존재하지 않는 UUID의 예약이라면") {
 
-        setupDefaultLock()
-
-        every {
-            mockLock.tryLock(5, 10, TimeUnit.SECONDS)
-        } returns true
-
         every { // repo 모킹
             reservationRepo.findByUuid("INVALID_UUID")
         } returns null
@@ -172,7 +136,7 @@ class ReservationServiceTest : BehaviorSpec({
         `when`("확정을 시도하면") {
             then("예외가 발생한다.") {
                 shouldThrow<IllegalStateException> {
-                    reservationService.confirmReservation(
+                    reservationProcessor.processConfirm(
                         "INVALID_UUID"
                     )
                 }

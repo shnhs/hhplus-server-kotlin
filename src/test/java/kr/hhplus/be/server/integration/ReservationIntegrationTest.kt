@@ -6,6 +6,8 @@ import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.ReservationService
 import kr.hhplus.be.server.domain.repo.ReservationRepo
+import kr.hhplus.be.server.infrastructure.persistence.ConcertSeatJpaRepo
+import org.redisson.api.RedissonClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.util.concurrent.CountDownLatch
@@ -18,23 +20,29 @@ import java.util.concurrent.atomic.AtomicInteger
 class ReservationIntegrationTest(
     private val reservationService: ReservationService,
     private val reservationRepo: ReservationRepo,
-    private val persistenceFixtures: PersistenceFixtures
+    private val concertSeatRepo: ConcertSeatJpaRepo,
+    private val persistenceFixtures: PersistenceFixtures,
+    private val redissonClient: RedissonClient
 ) : BehaviorSpec({
 
+    // 데이터 정리
     beforeSpec {
-        reservationRepo.deleteAll() // 데이터 초기화
+        reservationRepo.deleteAll()
+        concertSeatRepo.deleteAll()
     }
 
     given("동일한 좌석에 대해") {
         val concertId = "CONCERT_1"
         val scheduleId = "SCHEDULE_1"
-        val seatNumber = 1
         val userCount = 5 // 동시요청 수
 
         // Fixture로 초기화
         val createAvailableSeatIds = persistenceFixtures.createAvailableSeats(
             concertId = concertId, scheduleId = scheduleId, seatCount = 5
         )
+
+        // 에러 추적을 위한 리스트
+        val exceptions = mutableListOf<Pair<String, Exception>>()
 
         `when`("$userCount 명의 유저가 동시에 예약을 시도하면") {
             val executorService = Executors.newFixedThreadPool(userCount)
@@ -49,12 +57,17 @@ class ReservationIntegrationTest(
                         latch.await() // 모든 스레드가 동시에 시작하도록 대기
 
                         // 모두 동시에 같은 좌석 예약시도
-                        reservationService.reserve(
+                        val reserve = reservationService.reserve(
                             seatId = createAvailableSeatIds.first(),
                             userId = "USER_$userId"
                         )
+                        println("[$userId] ✅ SUCCESS - Reservation: ${reserve.getUuid()}")
                         successCount.incrementAndGet()
                     } catch (e: Exception) {
+                        synchronized(exceptions) {
+                            exceptions.add("USER_$userId" to e)
+                        }
+                        println("[$userId] ❌ FAILED - ${e.javaClass.simpleName}: ${e.message}")
                         failCount.incrementAndGet()
                     }
                 }
@@ -63,6 +76,21 @@ class ReservationIntegrationTest(
             futures.forEach { it.get() }
             executorService.shutdown()
             executorService.awaitTermination(10, TimeUnit.SECONDS)
+
+            println("=".repeat(60))
+            println("Final Results:")
+            println("Success: ${successCount.get()}")
+            println("Fail: ${failCount.get()}")
+            println("\nException Details:")
+            exceptions.groupBy { it.second.javaClass.simpleName }
+                .forEach { (exType, exList) ->
+                    println("  $exType (${exList.size}건):")
+                    exList.take(2).forEach { (user, ex) ->
+                        println("    - $user: ${ex.message}")
+                    }
+                }
+            println("=".repeat(60))
+
 
             then("1명만 예약에 성공한다") {
                 successCount.get() shouldBe 1
