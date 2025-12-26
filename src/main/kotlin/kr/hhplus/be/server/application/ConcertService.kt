@@ -8,6 +8,7 @@ import kr.hhplus.be.server.interfaces.dto.ConcertDto.ConcertResponseDto
 import org.redisson.api.RedissonClient
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service
 class ConcertService(
@@ -29,6 +30,31 @@ class ConcertService(
             ?: throw IllegalStateException("존재하지 않는 콘서트 입니다.")
 
         return concertEntity.toDto()
+    }
+
+    /**
+     * 매진 임박 콘서트 랭킹 조회
+     */
+    fun getImminentConcerts(): List<ConcertResponseDto> {
+        val zSet = redissonClient.getScoredSortedSet<String>(
+            IMMINENT_CONCERT_RANKING_KEY
+        )
+
+        // 오름차순 상위 5개 조회 (점수가 작을 수록 매진임박)
+        val rankedConcertIds = zSet.valueRange(0, 4)
+        if (rankedConcertIds.isEmpty()) {
+            return listOf()
+        }
+
+        val concerts = concertJpaRepo.findByUuidIn(rankedConcertIds)
+        val concertMap = concerts.associateBy { it.uuid }
+
+        // TODO: 남은 좌석수 표시 여부 결정
+        return rankedConcertIds.stream()
+            .map { concertMap[it] }
+            .map { it?.toDto() }
+            .collect(Collectors.toList())
+            .filterNotNull()
     }
 
     /**

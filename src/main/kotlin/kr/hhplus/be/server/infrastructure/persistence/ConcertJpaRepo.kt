@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ConcertJpaRepo : JpaRepository<ConcertEntity, Long> {
     fun findByUuid(uuid: String): ConcertEntity?
+    fun findByUuidIn(uuids: Collection<String>): List<ConcertEntity>
 }
