@@ -12,12 +12,17 @@ import kr.hhplus.be.server.domain.model.Reservation
 import kr.hhplus.be.server.domain.repo.ReservationRepo
 import kr.hhplus.be.server.enums.ReservationStatus
 import kr.hhplus.be.server.infrastructure.persistence.ConcertSeatJpaRepo
+import org.redisson.api.RLock
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
-class ReservationServiceTest : BehaviorSpec({
+class ReservationProcessorTest : BehaviorSpec({
     val reservationRepo = mockk<ReservationRepo>()
     val concertSeatRepo = mockk<ConcertSeatJpaRepo>()
-    val reservationService = ReservationService(concertSeatRepo, reservationRepo)
+    val reservationProcessor = ReservationProcessor(
+        concertSeatRepo, reservationRepo
+    )
+    val mockLock = mockk<RLock>(relaxed = true)
 
     val fixture = Fixtures()
 
@@ -27,7 +32,6 @@ class ReservationServiceTest : BehaviorSpec({
     val testSeatNumber = 10
     val testUserId = "TEST_USER"
 
-
     given("좌석이 아직 예약가능할 때") {
         val availableTestSeat = fixture.concertSeat(
             concertId = testConcertId,
@@ -35,6 +39,11 @@ class ReservationServiceTest : BehaviorSpec({
             seatNumber = testSeatNumber,
             status = ReservationStatus.AVAILABLE
         )
+
+
+        every {
+            mockLock.tryLock(5, 10, TimeUnit.SECONDS)
+        } returns true
 
         every {
             concertSeatRepo.findByUuid(availableTestSeat.uuid)
@@ -46,7 +55,7 @@ class ReservationServiceTest : BehaviorSpec({
         } answers { firstArg() }
 
         `when`("예약을 요청하면") {
-            val result = reservationService.reserve(
+            val result = reservationProcessor.proceedReservation(
                 seatId = availableTestSeat.uuid,
                 userId = testUserId
             )
@@ -77,7 +86,7 @@ class ReservationServiceTest : BehaviorSpec({
         `when`("예약을 시도하면") {
             then("예외가 발생한다.") {
                 shouldThrow<IllegalStateException> {
-                    reservationService.reserve(
+                    reservationProcessor.proceedReservation(
                         seatId = pendingTestSeat.uuid,
                         userId = testUserId
                     )
@@ -96,6 +105,7 @@ class ReservationServiceTest : BehaviorSpec({
             reservedAt = LocalDateTime.now().minusMinutes(2),
             status = ReservationStatus.PENDING
         )
+
         every { // repo 모킹
             reservationRepo.findByUuid(testReservationId)
         } returns reservation
@@ -105,7 +115,7 @@ class ReservationServiceTest : BehaviorSpec({
         } answers { firstArg() }
 
         `when`("확정하려고 시도하면") {
-            val confirmReservation = reservationService.confirmReservation(
+            val confirmReservation = reservationProcessor.processConfirm(
                 reservationId = testReservationId
             )
             then("확정 되어야 한다.") {
@@ -126,7 +136,7 @@ class ReservationServiceTest : BehaviorSpec({
         `when`("확정을 시도하면") {
             then("예외가 발생한다.") {
                 shouldThrow<IllegalStateException> {
-                    reservationService.confirmReservation(
+                    reservationProcessor.processConfirm(
                         "INVALID_UUID"
                     )
                 }

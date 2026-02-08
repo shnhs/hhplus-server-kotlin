@@ -51,6 +51,7 @@ dependencies {
 
     // DB
     runtimeOnly("com.mysql:mysql-connector-j")
+    implementation("org.redisson:redisson-spring-boot-starter:3.25.0")
 
     // Test
     testImplementation(kotlin("test"))
@@ -68,6 +69,8 @@ dependencies {
 
     // ETC
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 tasks.withType<Test> {

@@ -7,7 +7,7 @@ import kr.hhplus.be.server.interfaces.dto.ReservationDto.ReservationResponseDto
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping(name = "/api/reservations")
+@RequestMapping("/api/reservations")
 class ReservationController(
     private val reservationService: ReservationService
 ) {
