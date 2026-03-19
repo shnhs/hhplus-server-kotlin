@@ -46,4 +46,12 @@ class ConcertController(
             )
         )
     }
+
+    @GetMapping("/imminent")
+    fun getImminentConcerts()
+            : CommonResponseDto<List<ConcertResponseDto>> {
+        return CommonResponseDto(
+            concertService.getImminentConcerts()
+        )
+    }
 }
